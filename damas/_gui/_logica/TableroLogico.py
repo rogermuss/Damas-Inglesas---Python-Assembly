@@ -25,10 +25,10 @@ class TableroLogico:
                     elif fila > 4:
                         self.matriz[fila][col].ficha = Ficha(Usuario.J1, Tipo.FICHA, Estado.JUGABLE)
 
-    def validar_movimiento(self, turno: Usuario, origen: Casilla, destino: Casilla) -> bool:
+    def validar_movimiento(self, origen: Casilla, destino: Casilla) -> bool:
         if origen.ficha is not None and destino.ficha is None:
             # Definir dirección y enemigo según el jugador
-            if turno == Usuario.J1:
+            if self.turno == Usuario.J1:
                 direccion = -1  # J1 avanza hacia arriba
                 enemigo = Usuario.J2
             else:
@@ -60,127 +60,123 @@ class TableroLogico:
                     return True
         return False
 
-    def concatenar(self, nuevo_origen: Casilla, enemigo:Usuario) -> bool:
-        #Movimiento abajo a la derecha
-        if self.matriz[nuevo_origen.fila+2][nuevo_origen.columna+2].ficha is None:
-            mid_fila = nuevo_origen.fila + self.matriz[nuevo_origen.fila+2][nuevo_origen.columna+2].fila-nuevo_origen.fila // 2
-            mid_col = nuevo_origen.columna + self.matriz[nuevo_origen.fila+2][nuevo_origen.columna+2].fila-nuevo_origen.columna // 2
-            if self.matriz[mid_fila][mid_col].ficha == enemigo:
-                self.puede_concatenar = True
-        # Movimiento abajo a la izquierda
-        if self.matriz[nuevo_origen.fila+2][nuevo_origen.columna-2].ficha is None:
-            mid_fila = nuevo_origen.fila + self.matriz[nuevo_origen.fila + 2][
-                nuevo_origen.columna - 2].fila - nuevo_origen.fila // 2
-            mid_col = nuevo_origen.columna + self.matriz[nuevo_origen.fila + 2][
-                nuevo_origen.columna - 2].fila - nuevo_origen.columna // 2
-            if self.matriz[mid_fila][mid_col].ficha == enemigo:
-                self.puede_concatenar = True
-        #Movimiento arriba a la derecha
-        if self.matriz[nuevo_origen.fila - 2][nuevo_origen.columna + 2].ficha is None:
-            mid_fila = nuevo_origen.fila + self.matriz[nuevo_origen.fila - 2][
-                nuevo_origen.columna + 2].fila - nuevo_origen.fila // 2
-            mid_col = nuevo_origen.columna + self.matriz[nuevo_origen.fila - 2][
-                nuevo_origen.columna + 2].fila - nuevo_origen.columna // 2
-            if self.matriz[mid_fila][mid_col].ficha == enemigo:
-                self.puede_concatenar = True
-        #Movimiento arriba a la izquierda
-        if self.matriz[nuevo_origen.fila - 2][nuevo_origen.columna - 2].ficha is None:
-            mid_fila = nuevo_origen.fila + self.matriz[nuevo_origen.fila - 2][
-                nuevo_origen.columna - 2].fila - nuevo_origen.fila // 2
-            mid_col = nuevo_origen.columna + self.matriz[nuevo_origen.fila - 2][
-                nuevo_origen.columna - 2].fila - nuevo_origen.columna // 2
-            if self.matriz[mid_fila][mid_col].ficha == enemigo:
-                self.puede_concatenar = True
+    def concatenar(self, nuevo_origen: Casilla, enemigo: Usuario) -> bool:
+        filas = len(self.matriz)
+        cols = len(self.matriz[0])
 
-        #Si no puede concatenar el turno cambia
+        # Movimiento abajo a la derecha
+        if nuevo_origen.fila + 2 < filas and nuevo_origen.columna + 2 < cols:
+            if self.matriz[nuevo_origen.fila + 2][nuevo_origen.columna + 2].ficha is None:
+                mid_fila = nuevo_origen.fila + (
+                            self.matriz[nuevo_origen.fila + 2][nuevo_origen.columna + 2].fila - nuevo_origen.fila) // 2
+                mid_col = nuevo_origen.columna + (self.matriz[nuevo_origen.fila + 2][
+                                                      nuevo_origen.columna + 2].columna - nuevo_origen.columna) // 2
+                if self.matriz[mid_fila][mid_col].ficha == enemigo:
+                    self.puede_concatenar = True
+
+        # Movimiento abajo a la izquierda
+        if nuevo_origen.fila + 2 < filas and nuevo_origen.columna - 2 >= 0:
+            if self.matriz[nuevo_origen.fila + 2][nuevo_origen.columna - 2].ficha is None:
+                mid_fila = nuevo_origen.fila + (
+                            self.matriz[nuevo_origen.fila + 2][nuevo_origen.columna - 2].fila - nuevo_origen.fila) // 2
+                mid_col = nuevo_origen.columna + (self.matriz[nuevo_origen.fila + 2][
+                                                      nuevo_origen.columna - 2].columna - nuevo_origen.columna) // 2
+                if self.matriz[mid_fila][mid_col].ficha == enemigo:
+                    self.puede_concatenar = True
+
+        # Movimiento arriba a la derecha
+        if nuevo_origen.fila - 2 >= 0 and nuevo_origen.columna + 2 < cols:
+            if self.matriz[nuevo_origen.fila - 2][nuevo_origen.columna + 2].ficha is None:
+                mid_fila = nuevo_origen.fila + (
+                            self.matriz[nuevo_origen.fila - 2][nuevo_origen.columna + 2].fila - nuevo_origen.fila) // 2
+                mid_col = nuevo_origen.columna + (self.matriz[nuevo_origen.fila - 2][
+                                                      nuevo_origen.columna + 2].columna - nuevo_origen.columna) // 2
+                if self.matriz[mid_fila][mid_col].ficha == enemigo:
+                    self.puede_concatenar = True
+
+        # Movimiento arriba a la izquierda
+        if nuevo_origen.fila - 2 >= 0 and nuevo_origen.columna - 2 >= 0:
+            if self.matriz[nuevo_origen.fila - 2][nuevo_origen.columna - 2].ficha is None:
+                mid_fila = nuevo_origen.fila + (
+                            self.matriz[nuevo_origen.fila - 2][nuevo_origen.columna - 2].fila - nuevo_origen.fila) // 2
+                mid_col = nuevo_origen.columna + (self.matriz[nuevo_origen.fila - 2][
+                                                      nuevo_origen.columna - 2].columna - nuevo_origen.columna) // 2
+                if self.matriz[mid_fila][mid_col].ficha == enemigo:
+                    self.puede_concatenar = True
+
+        # Si no puede concatenar el turno cambia
         if not self.puede_concatenar:
             self.turno = enemigo
             return False
 
         return True
 
+    def puede_mover(self, jugador, rival: Usuario) -> bool:
+        filas = len(self.matriz)
+        cols = len(self.matriz[0])
 
-    def verificar_victoria(self) -> Usuario | None:
-        fichas_rival = 0
-        if self.turno == Usuario.J2:
-            rival = Usuario.J1
-        else:
-            rival = Usuario.J2
-
-        for fila in range(8):
-            for col in range(8):
-                if self.matriz[fila][col].ficha.usuario == rival:
-                    fichas_rival += 1
-        if fichas_rival > 0 or not self.puede_mover_o_comer(rival, self.turno):
-            return self.turno
-        return None
-
-
-    def puede_mover_o_comer(self, jugador:Usuario, rival:Usuario) -> bool:
-        if self.puede_comer(jugador, rival) or self.puede_mover(jugador, rival):
-            return True
-        return False
-
-    def puede_mover(self, jugador, rival:Usuario) -> bool:
-        for fila in range(8):
-            for col in range(8):
+        for fila in range(filas):
+            for col in range(cols):
                 if self.matriz[fila][col].ficha.usuario == jugador:
                     origen = self.matriz[fila][col]
 
-                    if self.matriz[fila+1][col+1].ficha is None:
-                        return True
-                    if self.matriz[fila+1][col-1].ficha is None:
-                        return True
-                    if self.matriz[fila-1][col+1].ficha is None:
-                        return True
-                    if self.matriz[fila-1][col-1].ficha is None:
-                        return True
+                    if fila + 1 < filas and col + 1 < cols:
+                        if self.matriz[fila + 1][col + 1].ficha is None:
+                            return True
+                    if fila + 1 < filas and col - 1 >= 0:
+                        if self.matriz[fila + 1][col - 1].ficha is None:
+                            return True
+                    if fila - 1 >= 0 and col + 1 < cols:
+                        if self.matriz[fila - 1][col + 1].ficha is None:
+                            return True
+                    if fila - 1 >= 0 and col - 1 >= 0:
+                        if self.matriz[fila - 1][col - 1].ficha is None:
+                            return True
         return False
 
+    def puede_comer(self, jugador: Usuario, rival: Usuario) -> bool:
+        filas = len(self.matriz)
+        cols = len(self.matriz[0])
 
-    def puede_comer(self, jugador:Usuario, rival:Usuario) -> bool:
-        for fila in range(8):
-            for col in range(8):
+        for fila in range(filas):
+            for col in range(cols):
                 if self.matriz[fila][col].ficha.usuario == jugador:
-                    #Verificar todos los posibles movimientos
                     origen = self.matriz[fila][col]
 
                     # Movimiento abajo a la derecha
-                    if self.matriz[origen.fila + 2][origen.columna + 2].ficha is None:
-                        mid_fila = origen.fila + (
-                                    self.matriz[origen.fila + 2][origen.columna + 2].fila - origen.fila) // 2
-                        mid_col = origen.columna + (
-                                    self.matriz[origen.fila + 2][origen.columna + 2].columna - origen.columna) // 2
-                        if self.matriz[mid_fila][mid_col].ficha == rival:
-                            return True
+                    if fila + 2 < filas and col + 2 < cols:
+                        if self.matriz[fila + 2][col + 2].ficha is None:
+                            mid_fila = fila + 1
+                            mid_col = col + 1
+                            if self.matriz[mid_fila][mid_col].ficha == rival:
+                                return True
 
                     # Movimiento abajo a la izquierda
-                    if self.matriz[origen.fila + 2][origen.columna - 2].ficha is None:
-                        mid_fila = origen.fila + (
-                                    self.matriz[origen.fila + 2][origen.columna - 2].fila - origen.fila) // 2
-                        mid_col = origen.columna + (
-                                    self.matriz[origen.fila + 2][origen.columna - 2].columna - origen.columna) // 2
-                        if self.matriz[mid_fila][mid_col].ficha == rival:
-                            return True
+                    if fila + 2 < filas and col - 2 >= 0:
+                        if self.matriz[fila + 2][col - 2].ficha is None:
+                            mid_fila = fila + 1
+                            mid_col = col - 1
+                            if self.matriz[mid_fila][mid_col].ficha == rival:
+                                return True
 
                     # Movimiento arriba a la derecha
-                    if self.matriz[origen.fila - 2][origen.columna + 2].ficha is None:
-                        mid_fila = origen.fila + (
-                                    self.matriz[origen.fila - 2][origen.columna + 2].fila - origen.fila) // 2
-                        mid_col = origen.columna + (
-                                    self.matriz[origen.fila - 2][origen.columna + 2].columna - origen.columna) // 2
-                        if self.matriz[mid_fila][mid_col].ficha == rival:
-                            return True
+                    if fila - 2 >= 0 and col + 2 < cols:
+                        if self.matriz[fila - 2][col + 2].ficha is None:
+                            mid_fila = fila - 1
+                            mid_col = col + 1
+                            if self.matriz[mid_fila][mid_col].ficha == rival:
+                                return True
 
                     # Movimiento arriba a la izquierda
-                    if self.matriz[origen.fila - 2][origen.columna - 2].ficha is None:
-                        mid_fila = origen.fila + (
-                                    self.matriz[origen.fila - 2][origen.columna - 2].fila - origen.fila) // 2
-                        mid_col = origen.columna + (
-                                    self.matriz[origen.fila - 2][origen.columna - 2].columna - origen.columna) // 2
-                        if self.matriz[mid_fila][mid_col].ficha == rival:
-                            return True
+                    if fila - 2 >= 0 and col - 2 >= 0:
+                        if self.matriz[fila - 2][col - 2].ficha is None:
+                            mid_fila = fila - 1
+                            mid_col = col - 1
+                            if self.matriz[mid_fila][mid_col].ficha == rival:
+                                return True
         return False
+
+
 # Ejemplo de uso
 tablero = TableroLogico()
 
