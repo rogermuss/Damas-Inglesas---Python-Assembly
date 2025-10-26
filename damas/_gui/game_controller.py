@@ -13,11 +13,11 @@ class Game(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         # Inicializar tamaño de la ventana
         self.setFixedSize(800, 724)
-        # Llama a la funcion actualizar_tablero()
+        # Llama a la funcion crear_tablero()
         self.tableroLogico = TableroLogico()
-        self.actualizar_tablero()
+        self.crear_tablero()
 
-    def actualizar_tablero(self):
+    def crear_tablero(self):
         for fila in range(9):
             for col in range(9):
                 if fila == 0 and col == 0:
@@ -84,7 +84,35 @@ class Game(QtWidgets.QMainWindow, Ui_MainWindow):
         casilla.leaveEvent = lambda event: self.unhover_casilla(event, fila, col)
         casilla.mousePressEvent = lambda event: self.click_casilla(event, fila, col)
 
+    def actualizar_fichas_solamente(self):
+        for fila in range(1, 9):
+            for col in range(1, 9):
+                casilla_widget = self.gridLayout_2.itemAtPosition(fila, col).widget()
+                if casilla_widget and (fila + col) % 2 != 0:  # Solo casillas negras
+                    # Limpiar layout de la casilla
+                    layout = casilla_widget.layout()
+                    while layout.count():
+                        item = layout.takeAt(0)
+                        if item.widget():
+                            item.widget().deleteLater()
 
+                    # Agregar ficha si existe
+                    ficha = self.tableroLogico.matriz[fila - 1][col - 1].ficha
+                    if ficha is not None:
+                        label_ficha = QtWidgets.QLabel()
+                        label_ficha.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+                        label_ficha.setStyleSheet("background: transparent; border: none;")
+                        label_ficha.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
+
+                        if ficha.usuario == Usuario.J2:
+                            pixmap = QtGui.QPixmap("_resources/PiezaAzul.png")
+                        else:
+                            pixmap = QtGui.QPixmap("_resources/PiezaRoja.png")
+
+                        label_ficha.setPixmap(pixmap.scaled(50, 50,
+                                                            QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                                                            QtCore.Qt.TransformationMode.SmoothTransformation))
+                        layout.addWidget(label_ficha)
 
 
     def hover_casilla(self, event, fila, col):
@@ -108,7 +136,15 @@ class Game(QtWidgets.QMainWindow, Ui_MainWindow):
             original_color = "#2E2E2E" if (fila + col) % 2 != 0 else "#E6E6E6"
             casilla.setStyleSheet(f"background-color: {original_color};")
 
+    def returnDefault(self):
+        if self.contenedor_seleccionado is not None:
+            fila_seleccionada = self.contenedor_seleccionado.fila + 1
+            col_seleccionada = self.contenedor_seleccionado.columna + 1
+            casilla = self.gridLayout_2.itemAtPosition(fila_seleccionada, col_seleccionada).widget()
 
+            if casilla:
+                original_color = "#2E2E2E" if (fila_seleccionada + col_seleccionada) % 2 != 0 else "#E6E6E6"
+                casilla.setStyleSheet(f"background-color: {original_color};")
 
 
 
@@ -131,24 +167,31 @@ class Game(QtWidgets.QMainWindow, Ui_MainWindow):
                 """)
             else:
                 casilla.setStyleSheet("""
-                    background-color: #4C7BB8;
+                    background-color: #A3C1E0;  /* azul pastel */
                     border-width: 3px;
                     border-style: solid;
-                    border-image: linear-gradient(to right, #1E3A6B, #4C7BB8) 1;
+                    border-color: #4C7BB8;  /* azul más intenso */
                     border-radius: 4px;
                 """)
+
             self.contenedor_seleccionado = casilla_logica
             print(f"Click permitido en casilla ({fila}, {col})")
         else:
-            if self.contenedor_seleccionado is self.tableroLogico.matriz[fila - 1][col - 1]:
-                self.contenedor_seleccionado = None
-                casilla = self.gridLayout_2.itemAtPosition(fila, col).widget()
-                original_color = "#2E2E2E" if (fila + col) % 2 != 0 else "#E6E6E6"
-                casilla.setStyleSheet(f"background-color: {original_color};")
-                return
+            if self.contenedor_seleccionado is not None:
+                if self.contenedor_seleccionado is self.tableroLogico.matriz[fila - 1][col - 1]:
+                    self.contenedor_seleccionado = None
+                    casilla = self.gridLayout_2.itemAtPosition(fila, col).widget()
+                    original_color = "#2E2E2E" if (fila + col) % 2 != 0 else "#E6E6E6"
+                    casilla.setStyleSheet(f"background-color: {original_color};")
+                    return
 
-            if tablero.validar_movimiento(self.contenedor_seleccionado, casilla_logica):
-                self.actualizar_tablero()
+                if self.tableroLogico.validar_movimiento(self.contenedor_seleccionado, casilla_logica):
+                    self.actualizar_fichas_solamente()
+                    self.returnDefault()
+                    self.contenedor_seleccionado = None
+                    self.tableroLogico.puede_concatenar = False
+
+
 
 
 

@@ -6,12 +6,11 @@ class Casilla:
         self.fila = fila
         self.columna = columna
 
+    def getFila(self):
+        return self.fila  # Cambio aquí
 
-    def setFicha(self, ficha: Ficha):
-        self.ficha = ficha
-
-    def setFila(self, ficha: Ficha):
-        self.ficha = ficha
+    def getColumna(self):
+        return self.columna
 
     def setColumna(self, columna: int):
         self.columna = columna

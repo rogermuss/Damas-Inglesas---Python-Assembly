@@ -41,13 +41,16 @@ class TableroLogico:
             abs_diff_columna = abs(columna_diff)
 
             # Para fichas normales, solo avanzan hacia adelante
-            if origen.ficha.tipo == Tipo.FICHA and fila_diff * direccion <= 0:
+            if origen.ficha.tipo == Tipo.FICHA and fila_diff * direccion < 0:
                 return False  # No puede moverse hacia atrás
 
             # Movimiento simple de 1
             if abs_diff_fila == 1 and abs_diff_columna == 1:
-                self.turno = Usuario.J2
-                return True
+                if abs_diff_fila == 1 and abs_diff_columna == 1:
+                    destino.ficha = origen.ficha  # Mover ficha
+                    origen.ficha = None  # Limpiar origen
+                    self.turno = Usuario.J2 if self.turno == Usuario.J1 else Usuario.J1
+                    return True
 
             # Movimiento de salto de 2
             elif abs_diff_fila == 2 and abs_diff_columna == 2:
@@ -56,6 +59,8 @@ class TableroLogico:
                 if (self.matriz[mid_fila][mid_col].ficha is not None and
                         self.matriz[mid_fila][mid_col].ficha.usuario == enemigo):
                     self.matriz[mid_fila][mid_col].ficha = None
+                    destino.ficha = origen.ficha  # Mover ficha
+                    origen.ficha = None  # Limpiar origen
                     self.concatenar(destino, enemigo)
                     return True
         return False
@@ -71,7 +76,8 @@ class TableroLogico:
                             self.matriz[nuevo_origen.fila + 2][nuevo_origen.columna + 2].fila - nuevo_origen.fila) // 2
                 mid_col = nuevo_origen.columna + (self.matriz[nuevo_origen.fila + 2][
                                                       nuevo_origen.columna + 2].columna - nuevo_origen.columna) // 2
-                if self.matriz[mid_fila][mid_col].ficha == enemigo:
+                if self.matriz[mid_fila][mid_col].ficha is not None and self.matriz[mid_fila][
+                    mid_col].ficha.usuario == enemigo:
                     self.puede_concatenar = True
 
         # Movimiento abajo a la izquierda
@@ -81,7 +87,8 @@ class TableroLogico:
                             self.matriz[nuevo_origen.fila + 2][nuevo_origen.columna - 2].fila - nuevo_origen.fila) // 2
                 mid_col = nuevo_origen.columna + (self.matriz[nuevo_origen.fila + 2][
                                                       nuevo_origen.columna - 2].columna - nuevo_origen.columna) // 2
-                if self.matriz[mid_fila][mid_col].ficha == enemigo:
+                if self.matriz[mid_fila][mid_col].ficha is not None and self.matriz[mid_fila][
+                    mid_col].ficha.usuario == enemigo:
                     self.puede_concatenar = True
 
         # Movimiento arriba a la derecha
@@ -91,7 +98,8 @@ class TableroLogico:
                             self.matriz[nuevo_origen.fila - 2][nuevo_origen.columna + 2].fila - nuevo_origen.fila) // 2
                 mid_col = nuevo_origen.columna + (self.matriz[nuevo_origen.fila - 2][
                                                       nuevo_origen.columna + 2].columna - nuevo_origen.columna) // 2
-                if self.matriz[mid_fila][mid_col].ficha == enemigo:
+                if self.matriz[mid_fila][mid_col].ficha is not None and self.matriz[mid_fila][
+                    mid_col].ficha.usuario == enemigo:
                     self.puede_concatenar = True
 
         # Movimiento arriba a la izquierda
@@ -101,7 +109,8 @@ class TableroLogico:
                             self.matriz[nuevo_origen.fila - 2][nuevo_origen.columna - 2].fila - nuevo_origen.fila) // 2
                 mid_col = nuevo_origen.columna + (self.matriz[nuevo_origen.fila - 2][
                                                       nuevo_origen.columna - 2].columna - nuevo_origen.columna) // 2
-                if self.matriz[mid_fila][mid_col].ficha == enemigo:
+                if self.matriz[mid_fila][mid_col].ficha is not None and self.matriz[mid_fila][
+                    mid_col].ficha.usuario == enemigo:
                     self.puede_concatenar = True
 
         # Si no puede concatenar el turno cambia
@@ -117,7 +126,7 @@ class TableroLogico:
 
         for fila in range(filas):
             for col in range(cols):
-                if self.matriz[fila][col].ficha.usuario == jugador:
+                if self.matriz[fila][col].ficha is not None and self.matriz[fila][col].ficha.usuario == jugador:
                     origen = self.matriz[fila][col]
 
                     if fila + 1 < filas and col + 1 < cols:
