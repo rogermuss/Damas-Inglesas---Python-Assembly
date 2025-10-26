@@ -10,6 +10,7 @@ from .Casilla import *
 class TableroLogico:
 
     def __init__(self):
+        self.casilla_de_concatenacion = None
         self.puede_concatenar = False
         self.matriz = [[Casilla(fila, col, None) for col in range(8)] for fila in range(8)]
         self.turno = Usuario.J1
@@ -26,7 +27,8 @@ class TableroLogico:
                         self.matriz[fila][col].ficha = Ficha(Usuario.J1, Tipo.FICHA, Estado.JUGABLE)
 
     def validar_movimiento(self, origen: Casilla, destino: Casilla) -> bool:
-        if origen.ficha is not None and destino.ficha is None:
+        if ((origen.ficha is not None and destino.ficha is None)
+            and (self.casilla_de_concatenacion is origen or self.casilla_de_concatenacion is None)):
             # Definir dirección y enemigo según el jugador
             if self.turno == Usuario.J1:
                 direccion = -1  # J1 avanza hacia arriba
@@ -41,14 +43,21 @@ class TableroLogico:
             abs_diff_columna = abs(columna_diff)
 
             # Para fichas normales, solo avanzan hacia adelante
-            if origen.ficha.tipo == Tipo.FICHA and fila_diff * direccion < 0:
+            if origen.ficha.tipo == Tipo.FICHA and fila_diff * direccion < 0 and self.puede_concatenar is not True:
                 return False  # No puede moverse hacia atrás
 
             # Movimiento simple de 1
-            if abs_diff_fila == 1 and abs_diff_columna == 1:
+            if abs_diff_fila == 1 and abs_diff_columna == 1 and self.puede_concatenar is not True:
                 if abs_diff_fila == 1 and abs_diff_columna == 1:
                     destino.ficha = origen.ficha  # Mover ficha
                     origen.ficha = None  # Limpiar origen
+
+                    if self.turno == Usuario.J1 and destino.fila ==0:
+                        destino.ficha.tipo = Tipo.DAMA
+                    elif self.turno == Usuario.J2 and destino.fila == 7:
+                        destino.ficha.tipo = Tipo.DAMA
+                    self.casilla_de_concatenacion = None  # Resetear
+
                     self.turno = Usuario.J2 if self.turno == Usuario.J1 else Usuario.J1
                     return True
 
@@ -61,6 +70,12 @@ class TableroLogico:
                     self.matriz[mid_fila][mid_col].ficha = None
                     destino.ficha = origen.ficha  # Mover ficha
                     origen.ficha = None  # Limpiar origen
+
+                    if self.turno == Usuario.J1 and destino.fila ==0:
+                        destino.ficha.tipo = Tipo.DAMA
+                    elif self.turno == Usuario.J2 and destino.fila == 7:
+                        destino.ficha.tipo = Tipo.DAMA
+                    self.casilla_de_concatenacion = destino
                     self.concatenar(destino, enemigo)
                     return True
         return False
@@ -68,6 +83,7 @@ class TableroLogico:
     def concatenar(self, nuevo_origen: Casilla, enemigo: Usuario) -> bool:
         filas = len(self.matriz)
         cols = len(self.matriz[0])
+        self.puede_concatenar = False
 
         # Movimiento abajo a la derecha
         if nuevo_origen.fila + 2 < filas and nuevo_origen.columna + 2 < cols:
@@ -116,6 +132,7 @@ class TableroLogico:
         # Si no puede concatenar el turno cambia
         if not self.puede_concatenar:
             self.turno = enemigo
+            self.casilla_de_concatenacion = None
             return False
 
         return True
@@ -128,20 +145,32 @@ class TableroLogico:
             for col in range(cols):
                 if self.matriz[fila][col].ficha is not None and self.matriz[fila][col].ficha.usuario == jugador:
                     origen = self.matriz[fila][col]
-
                     if fila + 1 < filas and col + 1 < cols:
                         if self.matriz[fila + 1][col + 1].ficha is None:
-                            return True
+                            if origen.ficha.tipo is Tipo.DAMA or origen.ficha.usuario is Usuario.J2:
+                                return True
                     if fila + 1 < filas and col - 1 >= 0:
                         if self.matriz[fila + 1][col - 1].ficha is None:
-                            return True
+                            if origen.ficha.tipo is Tipo.DAMA or origen.ficha.usuario is Usuario.J2:
+                                return True
                     if fila - 1 >= 0 and col + 1 < cols:
                         if self.matriz[fila - 1][col + 1].ficha is None:
-                            return True
+                            if origen.ficha.tipo is Tipo.DAMA or origen.ficha.usuario is Usuario.J1:
+                                return True
                     if fila - 1 >= 0 and col - 1 >= 0:
                         if self.matriz[fila - 1][col - 1].ficha is None:
-                            return True
+                            if origen.ficha.tipo is Tipo.DAMA or origen.ficha.usuario is Usuario.J1:
+                                return True
         return False
+
+    def puede_mover_o_comer(self) -> bool:
+        """Retorna True si el jugador actual puede hacer algún movimiento"""
+        if self.turno == Usuario.J1:
+            enemigo = Usuario.J2
+        else:
+            enemigo = Usuario.J1
+
+        return self.puede_mover(self.turno, enemigo) or self.puede_comer(self.turno, enemigo)
 
     def puede_comer(self, jugador: Usuario, rival: Usuario) -> bool:
         filas = len(self.matriz)
@@ -149,15 +178,13 @@ class TableroLogico:
 
         for fila in range(filas):
             for col in range(cols):
-                if self.matriz[fila][col].ficha.usuario == jugador:
-                    origen = self.matriz[fila][col]
-
-                    # Movimiento abajo a la derecha
+                if self.matriz[fila][col].ficha is not None and self.matriz[fila][col].ficha.usuario == jugador:
                     if fila + 2 < filas and col + 2 < cols:
                         if self.matriz[fila + 2][col + 2].ficha is None:
                             mid_fila = fila + 1
                             mid_col = col + 1
-                            if self.matriz[mid_fila][mid_col].ficha == rival:
+                            if (self.matriz[mid_fila][mid_col].ficha is not None and
+                                    self.matriz[mid_fila][mid_col].ficha.usuario == rival):
                                 return True
 
                     # Movimiento abajo a la izquierda
@@ -165,7 +192,8 @@ class TableroLogico:
                         if self.matriz[fila + 2][col - 2].ficha is None:
                             mid_fila = fila + 1
                             mid_col = col - 1
-                            if self.matriz[mid_fila][mid_col].ficha == rival:
+                            if (self.matriz[mid_fila][mid_col].ficha is not None and
+                                    self.matriz[mid_fila][mid_col].ficha.usuario == rival):
                                 return True
 
                     # Movimiento arriba a la derecha
@@ -173,7 +201,8 @@ class TableroLogico:
                         if self.matriz[fila - 2][col + 2].ficha is None:
                             mid_fila = fila - 1
                             mid_col = col + 1
-                            if self.matriz[mid_fila][mid_col].ficha == rival:
+                            if (self.matriz[mid_fila][mid_col].ficha is not None and
+                                    self.matriz[mid_fila][mid_col].ficha.usuario == rival):
                                 return True
 
                     # Movimiento arriba a la izquierda
@@ -181,10 +210,10 @@ class TableroLogico:
                         if self.matriz[fila - 2][col - 2].ficha is None:
                             mid_fila = fila - 1
                             mid_col = col - 1
-                            if self.matriz[mid_fila][mid_col].ficha == rival:
+                            if (self.matriz[mid_fila][mid_col].ficha is not None and
+                                    self.matriz[mid_fila][mid_col].ficha.usuario == rival):
                                 return True
         return False
-
 
 # Ejemplo de uso
 tablero = TableroLogico()

@@ -13,6 +13,8 @@ class Game(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         # Inicializar tamaño de la ventana
         self.setFixedSize(800, 724)
+
+        self.actionNew_Game.triggered.connect(self.reiniciar_juego)
         # Llama a la funcion crear_tablero()
         self.tableroLogico = TableroLogico()
         self.crear_tablero()
@@ -80,11 +82,13 @@ class Game(QtWidgets.QMainWindow, Ui_MainWindow):
     def activar_eventos_casilla(self, casilla, fila, col):
         casilla.setProperty("jugable", True)
         casilla.setMouseTracking(True)  # necesario para hover
+
         casilla.enterEvent = lambda event: self.hover_casilla(event, fila, col)
         casilla.leaveEvent = lambda event: self.unhover_casilla(event, fila, col)
         casilla.mousePressEvent = lambda event: self.click_casilla(event, fila, col)
 
-    def actualizar_fichas_solamente(self):
+
+    def actualizar_fichas(self):
         for fila in range(1, 9):
             for col in range(1, 9):
                 casilla_widget = self.gridLayout_2.itemAtPosition(fila, col).widget()
@@ -105,9 +109,15 @@ class Game(QtWidgets.QMainWindow, Ui_MainWindow):
                         label_ficha.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
 
                         if ficha.usuario == Usuario.J2:
-                            pixmap = QtGui.QPixmap("_resources/PiezaAzul.png")
+                            if ficha.tipo == Tipo.FICHA:
+                                pixmap = QtGui.QPixmap("_resources/PiezaAzul.png")
+                            else:
+                                pixmap = QtGui.QPixmap("_resources/PiezaMorada.png")
                         else:
-                            pixmap = QtGui.QPixmap("_resources/PiezaRoja.png")
+                            if ficha.tipo == Tipo.FICHA:
+                                pixmap = QtGui.QPixmap("_resources/PiezaRoja.png")
+                            else:
+                                pixmap = QtGui.QPixmap("_resources/PiezaAmarilla.png")
 
                         label_ficha.setPixmap(pixmap.scaled(50, 50,
                                                             QtCore.Qt.AspectRatioMode.KeepAspectRatio,
@@ -186,14 +196,59 @@ class Game(QtWidgets.QMainWindow, Ui_MainWindow):
                     return
 
                 if self.tableroLogico.validar_movimiento(self.contenedor_seleccionado, casilla_logica):
-                    self.actualizar_fichas_solamente()
+                    if not self.tableroLogico.puede_mover_o_comer():
+                      self.mostrar_mensaje_derrota(self.tableroLogico.turno)
+                    self.actualizar_fichas()
                     self.returnDefault()
                     self.contenedor_seleccionado = None
-                    self.tableroLogico.puede_concatenar = False
 
+    def mostrar_mensaje_derrota(self, perdedor: Usuario):
+        """Muestra un mensaje de derrota/victoria y pregunta si quiere jugar de nuevo"""
+        from PyQt6.QtWidgets import QMessageBox
 
+        # Determinar el mensaje según el ganador
+        if perdedor == Usuario.J2:
+            titulo = "¡Jugador 1 (Rojo) ha ganado!"
+            mensaje = "El Jugador 2 (Azul) no tiene más movimientos válidos."
+        else:
+            titulo = "¡Jugador 2 (Azul) ha ganado!"
+            mensaje = "El Jugador 1 (Rojo) no tiene más movimientos válidos."
 
+        # Crear el mensaje
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle(titulo)
+        msg_box.setText(mensaje)
+        msg_box.setInformativeText("¿Deseas jugar de nuevo?")
+        msg_box.setIcon(QMessageBox.Icon.Information)
 
+        # Agregar botones personalizados
+        btn_si = msg_box.addButton("Jugar de nuevo", QMessageBox.ButtonRole.AcceptRole)
+        btn_no = msg_box.addButton("Salir", QMessageBox.ButtonRole.RejectRole)
+
+        # Mostrar el diálogo y esperar respuesta
+        msg_box.exec()
+
+        # Verificar qué botón se presionó
+        if msg_box.clickedButton() == btn_si:
+            self.reiniciar_juego()
+        else:
+            self.close()  # Cierra la ventana
+
+    def reiniciar_juego(self):
+        """Reinicia el juego a su estado inicial"""
+        # Resetear lógica del tablero
+        self.tableroLogico = TableroLogico()
+        self.contenedor_seleccionado = None
+
+        # Limpiar el gridLayout
+        while self.gridLayout_2.count():
+            item = self.gridLayout_2.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
+        # Recrear el tablero
+        self.crear_tablero()
 
 
 if __name__ == "__main__":
