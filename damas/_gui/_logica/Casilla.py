@@ -1,4 +1,4 @@
-from Ficha import *
+from .Ficha import *
 
 class Casilla:
     def __init__(self, fila: int, columna: int, ficha: Ficha | None):

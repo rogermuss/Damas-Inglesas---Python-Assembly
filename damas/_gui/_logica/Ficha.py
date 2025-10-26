@@ -1,6 +1,6 @@
-from Usuario import *
-from Tipo import *
-from Estado import *
+from .Usuario import *
+from .Tipo import *
+from .Estado import *
 
 class Ficha:
 
