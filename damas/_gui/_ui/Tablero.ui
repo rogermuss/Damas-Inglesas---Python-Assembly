@@ -32,7 +32,11 @@
       <property name="autoFillBackground">
        <bool>false</bool>
       </property>
-      <layout class="QGridLayout" name="gridLayout_2"/>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <property name="spacing">
+        <number>8</number>
+       </property>
+      </layout>
      </widget>
     </item>
    </layout>
