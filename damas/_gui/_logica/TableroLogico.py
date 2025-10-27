@@ -10,6 +10,7 @@ from .Casilla import *
 class TableroLogico:
 
     def __init__(self):
+        self.pistas_concatenacion = [None,None,None,None]
         self.casilla_de_concatenacion = None
         self.puede_concatenar = False
         self.matriz = [[Casilla(fila, col, None) for col in range(8)] for fila in range(8)]
@@ -84,6 +85,7 @@ class TableroLogico:
         filas = len(self.matriz)
         cols = len(self.matriz[0])
         self.puede_concatenar = False
+        self.pistas_concatenacion = [None,None,None,None]
 
         # Movimiento abajo a la derecha
         if nuevo_origen.fila + 2 < filas and nuevo_origen.columna + 2 < cols:
@@ -94,6 +96,7 @@ class TableroLogico:
                                                       nuevo_origen.columna + 2].columna - nuevo_origen.columna) // 2
                 if self.matriz[mid_fila][mid_col].ficha is not None and self.matriz[mid_fila][
                     mid_col].ficha.usuario == enemigo:
+                    self.pistas_concatenacion[3] = self.matriz[nuevo_origen.fila + 2][nuevo_origen.columna + 2]
                     self.puede_concatenar = True
 
         # Movimiento abajo a la izquierda
@@ -105,6 +108,7 @@ class TableroLogico:
                                                       nuevo_origen.columna - 2].columna - nuevo_origen.columna) // 2
                 if self.matriz[mid_fila][mid_col].ficha is not None and self.matriz[mid_fila][
                     mid_col].ficha.usuario == enemigo:
+                    self.pistas_concatenacion[2] = self.matriz[nuevo_origen.fila + 2][nuevo_origen.columna - 2]
                     self.puede_concatenar = True
 
         # Movimiento arriba a la derecha
@@ -116,6 +120,7 @@ class TableroLogico:
                                                       nuevo_origen.columna + 2].columna - nuevo_origen.columna) // 2
                 if self.matriz[mid_fila][mid_col].ficha is not None and self.matriz[mid_fila][
                     mid_col].ficha.usuario == enemigo:
+                    self.pistas_concatenacion[1] = self.matriz[nuevo_origen.fila - 2][nuevo_origen.columna + 2]
                     self.puede_concatenar = True
 
         # Movimiento arriba a la izquierda
@@ -127,6 +132,7 @@ class TableroLogico:
                                                       nuevo_origen.columna - 2].columna - nuevo_origen.columna) // 2
                 if self.matriz[mid_fila][mid_col].ficha is not None and self.matriz[mid_fila][
                     mid_col].ficha.usuario == enemigo:
+                    self.pistas_concatenacion[0] = self.matriz[nuevo_origen.fila - 2][nuevo_origen.columna - 2]
                     self.puede_concatenar = True
 
         # Si no puede concatenar el turno cambia

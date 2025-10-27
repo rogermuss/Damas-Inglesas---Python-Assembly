@@ -201,6 +201,14 @@ class Game(QtWidgets.QMainWindow, Ui_MainWindow):
                     self.actualizar_fichas()
                     self.returnDefault()
                     self.contenedor_seleccionado = None
+                    if self.tableroLogico.pistas_concatenacion[0] is not None:
+                        self.resaltar_casilla_temporal(self.obtener_casilla_grafica(self.tableroLogico.pistas_concatenacion[0]))
+                    if self.tableroLogico.pistas_concatenacion[1] is not None:
+                        self.resaltar_casilla_temporal(self.obtener_casilla_grafica(self.tableroLogico.pistas_concatenacion[1]))
+                    if self.tableroLogico.pistas_concatenacion[2] is not None:
+                        self.resaltar_casilla_temporal(self.obtener_casilla_grafica(self.tableroLogico.pistas_concatenacion[2]))
+                    if self.tableroLogico.pistas_concatenacion[3] is not None:
+                        self.resaltar_casilla_temporal( self.obtener_casilla_grafica(self.tableroLogico.pistas_concatenacion[3]))
 
     def mostrar_mensaje_derrota(self, perdedor: Usuario):
         """Muestra un mensaje de derrota/victoria y pregunta si quiere jugar de nuevo"""
@@ -249,6 +257,23 @@ class Game(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # Recrear el tablero
         self.crear_tablero()
+
+    def obtener_casilla_grafica(self, casilla_logica: Casilla):
+        for fila in range(1,9):
+            for col in range(1,9):
+                if casilla_logica.fila+1 == fila and casilla_logica.columna +1 == col:
+                    return self.gridLayout_2.itemAtPosition(fila, col).widget()
+        return None
+
+    def resaltar_casilla_temporal(self, casilla):
+        # Guardar el estilo original
+        estilo_original = casilla.styleSheet()
+
+        # Cambiar a amarillo pastel
+        casilla.setStyleSheet("background-color: #FFFACD;")  # LemonChiffon
+
+        # Timer para restaurar el color despues de 3 segundos
+        QtCore.QTimer.singleShot(3000, lambda: casilla.setStyleSheet(estilo_original))
 
 
 if __name__ == "__main__":
