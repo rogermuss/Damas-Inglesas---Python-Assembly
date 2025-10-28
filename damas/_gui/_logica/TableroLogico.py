@@ -50,6 +50,7 @@ class TableroLogico:
             if origen.ficha.tipo == Tipo.FICHA and fila_diff * direccion < 0 and self.puede_concatenar is not True:
                 return False  # No puede moverse hacia atrás
 
+
             # Movimiento simple de 1
             if abs_diff_fila == 1 and abs_diff_columna == 1 and self.puede_concatenar is not True and self.obligar_comer is not True:
                 if abs_diff_fila == 1 and abs_diff_columna == 1:
