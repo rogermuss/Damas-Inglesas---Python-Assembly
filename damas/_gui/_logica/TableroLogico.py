@@ -11,8 +11,10 @@ class TableroLogico:
 
     def __init__(self):
         self.pistas_concatenacion = [None,None,None,None]
+        self.casillas_obligatorias = []
         self.casilla_de_concatenacion = None
         self.puede_concatenar = False
+        self.obligar_comer = False
         self.matriz = [[Casilla(fila, col, None) for col in range(8)] for fila in range(8)]
         self.turno = Usuario.J1
         self.generar_casillas_con_fichas()
@@ -30,6 +32,7 @@ class TableroLogico:
     def validar_movimiento(self, origen: Casilla, destino: Casilla) -> bool:
         if ((origen.ficha is not None and destino.ficha is None)
             and (self.casilla_de_concatenacion is origen or self.casilla_de_concatenacion is None)):
+            self.obligar_a_comer()
             # Definir dirección y enemigo según el jugador
             if self.turno == Usuario.J1:
                 direccion = -1  # J1 avanza hacia arriba
@@ -48,7 +51,7 @@ class TableroLogico:
                 return False  # No puede moverse hacia atrás
 
             # Movimiento simple de 1
-            if abs_diff_fila == 1 and abs_diff_columna == 1 and self.puede_concatenar is not True:
+            if abs_diff_fila == 1 and abs_diff_columna == 1 and self.puede_concatenar is not True and self.obligar_comer is not True:
                 if abs_diff_fila == 1 and abs_diff_columna == 1:
                     destino.ficha = origen.ficha  # Mover ficha
                     origen.ficha = None  # Limpiar origen
@@ -181,6 +184,8 @@ class TableroLogico:
     def puede_comer(self, jugador: Usuario, rival: Usuario) -> bool:
         filas = len(self.matriz)
         cols = len(self.matriz[0])
+        can_eat = False
+        self.casilla_de_concatenacion = None
 
         for fila in range(filas):
             for col in range(cols):
@@ -190,8 +195,11 @@ class TableroLogico:
                             mid_fila = fila + 1
                             mid_col = col + 1
                             if (self.matriz[mid_fila][mid_col].ficha is not None and
-                                    self.matriz[mid_fila][mid_col].ficha.usuario == rival):
-                                return True
+                                    self.matriz[mid_fila][mid_col].ficha.usuario == rival
+                                    and (self.matriz[fila][col].ficha.usuario == Usuario.J2 or self.matriz[fila][col].ficha.tipo == Tipo.DAMA)):
+                                can_eat = True
+                                self.casillas_obligatorias.append(self.matriz[fila][col])
+
 
                     # Movimiento abajo a la izquierda
                     if fila + 2 < filas and col - 2 >= 0:
@@ -199,8 +207,12 @@ class TableroLogico:
                             mid_fila = fila + 1
                             mid_col = col - 1
                             if (self.matriz[mid_fila][mid_col].ficha is not None and
-                                    self.matriz[mid_fila][mid_col].ficha.usuario == rival):
-                                return True
+                                    self.matriz[mid_fila][mid_col].ficha.usuario == rival
+                                    and (self.matriz[fila][col].ficha.usuario == Usuario.J2 or self.matriz[fila][
+                                        col].ficha.tipo == Tipo.DAMA)):
+                                can_eat = True
+                                self.casillas_obligatorias.append(self.matriz[fila][col])
+
 
                     # Movimiento arriba a la derecha
                     if fila - 2 >= 0 and col + 2 < cols:
@@ -208,8 +220,11 @@ class TableroLogico:
                             mid_fila = fila - 1
                             mid_col = col + 1
                             if (self.matriz[mid_fila][mid_col].ficha is not None and
-                                    self.matriz[mid_fila][mid_col].ficha.usuario == rival):
-                                return True
+                                    self.matriz[mid_fila][mid_col].ficha.usuario == rival
+                                    and (self.matriz[fila][col].ficha.usuario == Usuario.J1 or self.matriz[fila][
+                                        col].ficha.tipo == Tipo.DAMA)):
+                                can_eat = True
+                                self.casillas_obligatorias.append(self.matriz[fila][col])
 
                     # Movimiento arriba a la izquierda
                     if fila - 2 >= 0 and col - 2 >= 0:
@@ -217,9 +232,27 @@ class TableroLogico:
                             mid_fila = fila - 1
                             mid_col = col - 1
                             if (self.matriz[mid_fila][mid_col].ficha is not None and
-                                    self.matriz[mid_fila][mid_col].ficha.usuario == rival):
-                                return True
+                                    self.matriz[mid_fila][mid_col].ficha.usuario == rival
+                                    and (self.matriz[fila][col].ficha.usuario == Usuario.J1 or self.matriz[fila][
+                                        col].ficha.tipo == Tipo.DAMA)):
+                                can_eat = True
+                                self.casillas_obligatorias.append(self.matriz[fila][col])
+
+        if can_eat:
+            return True
         return False
+
+    def obligar_a_comer(self) -> bool:
+        if self.turno == Usuario.J1:
+            rival = Usuario.J2
+        else:
+            rival = Usuario.J1
+        if self.puede_comer(self.turno, rival):
+            self.obligar_comer = True
+            return True
+        self.obligar_comer = False
+        return False
+
 
 # Ejemplo de uso
 tablero = TableroLogico()
